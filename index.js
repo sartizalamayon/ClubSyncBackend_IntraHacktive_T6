@@ -1,8 +1,8 @@
+const { MongoClient, ServerApiVersion } = require('mongodb');
 const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
-const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -12,8 +12,8 @@ app.use(cors({
   }));
   app.use(express.json());
 
-const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.b6ckjyi.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
-
+  const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ixzkh9v.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
+console.log(uri);
 const client = new MongoClient(uri, {
     serverApi: {
       version: ServerApiVersion.v1,
@@ -44,6 +44,18 @@ const verifyToken = (req, res, next) => {
 async function run() {
     try {
 
+      const clubCollection = client.db("ClubSync").collection("clubs");
+      
+      app.get("/test", async (req, res) => {
+        const result = await clubCollection.find().toArray();
+        res.send(result);
+      });
+      
+
+
+      console.log(
+        "Pinged your deployment. You successfully connected to MongoDB!"
+      );
     } finally {
         // await client.close();
       }
