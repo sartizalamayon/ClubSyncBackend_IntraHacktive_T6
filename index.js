@@ -12,7 +12,7 @@ app.use(cors({
   }));
   app.use(express.json());
 
-const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.b6ckjyi.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
+  const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@skill-connect.amv3c.mongodb.net/?retryWrites=true&w=majority&appName=skill-connect`;
 
 const client = new MongoClient(uri, {
     serverApi: {
@@ -43,7 +43,11 @@ const verifyToken = (req, res, next) => {
 
 async function run() {
     try {
-
+      const clubCollection = client.db("ClubSync").collection("clubs");
+      app.get("/test", async (req, res) => {
+        const result = await clubCollection.find().toArray();
+        res.send(result);
+      });
     } finally {
         // await client.close();
       }
