@@ -12,8 +12,9 @@ app.use(cors({
   }));
   app.use(express.json());
 
-  const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ixzkh9v.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
-console.log(uri);
+
+  const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@skill-connect.amv3c.mongodb.net/?retryWrites=true&w=majority&appName=skill-connect`;
+
 const client = new MongoClient(uri, {
     serverApi: {
       version: ServerApiVersion.v1,
@@ -45,17 +46,22 @@ async function run() {
     try {
 
       const clubCollection = client.db("ClubSync").collection("clubs");
+
+
+      const clubCollection = client.db("ClubSync").collection("clubs");
       
       app.get("/test", async (req, res) => {
         const result = await clubCollection.find().toArray();
         res.send(result);
       });
+
       
 
 
       console.log(
         "Pinged your deployment. You successfully connected to MongoDB!"
       );
+
     } finally {
         // await client.close();
       }
