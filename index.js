@@ -49,6 +49,10 @@ async function run() {
         const result = await clubCollection.find().toArray();
         res.send(result);
       });
+      app.get("/get-club-list", async (req, res) => {
+        const result = await clubCollection.find({}, { projection: { name: 1, email: 1, _id: 0 } }).toArray();
+        res.send(result);
+      });
       
       console.log(
         "Pinged your deployment. You successfully connected to MongoDB!"
