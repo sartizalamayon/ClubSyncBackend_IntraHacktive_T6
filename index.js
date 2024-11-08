@@ -1,4 +1,4 @@
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
@@ -49,6 +49,46 @@ async function run() {
         const result = await clubCollection.find().toArray();
         res.send(result);
       });
+      app.get("/get-club-list", async (req, res) => {
+        const result = await clubCollection.find({}, { projection: { name: 1, email: 1, _id: 0 } }).toArray();
+        res.send(result);
+      });
+
+
+      const eventsCollection = client.db("ClubSync").collection("events");
+      app.post("/new-event", async(req, res) =>{
+        const data = req.body
+        const newEvent = await eventsCollection.insertOne(data);
+        console.log(newEvent)
+        if (newEvent?.acknowledged){
+          res.status(201).send('Event created successfully');
+        }
+        else{
+          res.status(400).send('Event Creation failed')
+        }
+      })
+
+      app.get("/get-pending-events/:email", async(req, res)=>{
+        const email = req.params.email
+        const events = await eventsCollection.find({ clubMail:email,  status: 'Pending'}).sort({date:-1}).toArray();
+        res.json(events);
+      })
+
+      app.get("/get-responded-events/:email", async(req, res)=>{
+        const email = req.params.email
+        const events = await eventsCollection.find({ clubMail:email,  status: 'Responded'}).sort({date:-1}).toArray();
+        res.json(events);
+      })
+
+      app.delete('/event-planner/:eventId', async(req, res)=>{
+        const id = req.params.eventId
+        const result = await eventsCollection.deleteOne({ _id: new ObjectId(id) });
+        if (result.deletedCount === 1) {
+            res.status(200).send('Event deleted successfully');
+        } else {
+            res.status(400).send('Failed to delete event');
+        }
+      })
       
       console.log(
         "Pinged your deployment. You successfully connected to MongoDB!"
