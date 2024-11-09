@@ -73,7 +73,7 @@ async function run() {
     app.get("/get-all-pending-events", async (req, res) => {
       const requests = await eventsCollection
         .find({ status: "Pending" })
-        .sort({ requestDate: -1 })
+        .sort({ date: -1 })
         .toArray();
       res.json(requests);
     });
