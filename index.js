@@ -44,69 +44,59 @@ const verifyToken = (req, res, next) => {
 };
 
 async function run() {
-  try {
-    const clubCollection = client.db("ClubSync").collection("clubs");
-    const messageCollection = client.db("ClubSync").collection("messages");
-    app.get("/test", async (req, res) => {
-      const result = await clubCollection.find().toArray();
-      res.send(result);
-    });
-    app.get("/get-club-list", async (req, res) => {
-      const result = await clubCollection
-        .find({}, { projection: { name: 1, email: 1, _id: 1, photo_url: 1 } })
-        .toArray();
-      res.send(result);
-    });
+    try {
 
-    const eventsCollection = client.db("ClubSync").collection("events");
-    app.post("/new-event", async (req, res) => {
-      const data = req.body;
-      const newEvent = await eventsCollection.insertOne(data);
-      console.log(newEvent);
-      if (newEvent?.acknowledged) {
-        res.status(201).send("Event created successfully");
-      } else {
-        res.status(400).send("Event Creation failed");
-      }
-    });
-
-    app.get("/get-all-pending-events", async (req, res) => {
-      const requests = await eventsCollection
-        .find({ status: "Pending" })
-        .sort({ requestDate: -1 })
-        .toArray();
-      res.json(requests);
-    });
-
-    app.get("/get-pending-events/:email", async (req, res) => {
-      const email = req.params.email;
-      const events = await eventsCollection
-        .find({ clubMail: email, status: "Pending" })
-        .sort({ date: -1 })
-        .toArray();
-      res.json(events);
-    });
-
-    app.get("/get-responded-events/:email", async (req, res) => {
-      const email = req.params.email;
-      const events = await eventsCollection
-        .find({ clubMail: email, status: "Responded" })
-        .sort({ date: -1 })
-        .toArray();
-      res.json(events);
-    });
-
-    app.delete("/event-planner/:eventId", async (req, res) => {
-      const id = req.params.eventId;
-      const result = await eventsCollection.deleteOne({
-        _id: new ObjectId(id),
+      const clubCollection = client.db("ClubSync").collection("clubs");
+      app.get("/test", async (req, res) => {
+        const result = await clubCollection.find().toArray();
+        res.send(result);
       });
-      if (result.deletedCount === 1) {
-        res.status(200).send("Event deleted successfully");
-      } else {
-        res.status(400).send("Failed to delete event");
-      }
-    });
+      app.get("/get-club-list", async (req, res) => {
+        const result = await clubCollection.find({}, { projection: { name: 1, email: 1, _id: 0 } }).toArray();
+        res.send(result);
+      });
+
+      const eventsCollection = client.db("ClubSync").collection("events");
+      app.post("/new-event", async(req, res) =>{
+        const data = req.body
+        const newEvent = await eventsCollection.insertOne(data);
+        console.log(newEvent)
+        if (newEvent?.acknowledged){
+          res.status(201).send('Event created successfully');
+        }
+        else{
+          res.status(400).send('Event Creation failed')
+        }
+      })
+
+      app.get('/get-all-pending-events', async (req, res) =>{
+        const requests = await eventsCollection.find({status: 'Pending'}).sort({requestDate:-1}).toArray()
+        res.json(requests)
+      })
+
+      app.get("/get-pending-events/:email", async(req, res)=>{
+        const email = req.params.email
+        const events = await eventsCollection.find({ clubMail:email,  status: 'Pending'}).sort({date:-1}).toArray();
+        res.json(events);
+      })
+
+      app.get("/get-responded-events/:email", async(req, res)=>{
+        const email = req.params.email
+        const events = await eventsCollection.find({ clubMail:email,  status: 'Responded'}).sort({date:-1}).toArray();
+        res.json(events);
+      })
+
+
+      app.delete('/event-planner/:eventId', async(req, res)=>{
+        const id = req.params.eventId
+        const result = await eventsCollection.deleteOne({ _id: new ObjectId(id) });
+        if (result.deletedCount === 1) {
+            res.status(200).send('Event deleted successfully');
+        } else {
+            res.status(400).send('Failed to delete event');
+        }
+      })
+      
 
     // Get a single event by ID
     app.get("/events/:id", async (req, res) => {
@@ -134,55 +124,20 @@ async function run() {
       }
     });
 
-    // get messages from the server
-    app.get("/get-messages/:clubMail", async (req, res) => {
-      const clubMail = req.params.clubMail;
-      const messages = await messageCollection
-        .find({
-          $or: [
-            { receiverEmail: clubMail, senderEmail: "oca@bracu.ac.bd" },
-            { senderEmail: clubMail, receiverEmail: "oca@bracu.ac.bd" },
-          ],
-        })
-        .sort({ date: 1, time: 1 }) // Sort messages by date and time, newest first
-        .toArray();
-
-      res.json(messages);
-    });
-    // send message
-    app.post("/send-message", async (req, res) => {
-      const messageInfo = req.body;
-    
-      const result = await messageCollection.insertOne(messageInfo);
-      res.send(result);
-    });
-    // get appected events to show on the central calendar
-    app.get('/accepted-events', async (req, res) => {  
-        const acceptedEvents = await eventsCollection
-          .find({ response: "Accepted" })
-          .project({ clubMail: 1, date: 1, _id: 0 }).toArray();
-        // Map through the array and transform the objects
-        const transformedEvents = acceptedEvents.map(event => ({
-          title: event.clubMail.split("@")[0].toUpperCase(), 
-          date: event.date 
-        }));
-    
-        res.json(transformedEvents);
       
+      console.log(
+        "Pinged your deployment. You successfully connected to MongoDB!"
+      );
+    } finally {
+        // await client.close();
+      }
+    }
+    run().catch(console.dir);
+    
+    app.get('/', (req, res) => {
+      res.send('Hello BRACU!');
     });
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
-    );
-  } finally {
-    // await client.close();
-  }
-}
-run().catch(console.dir);
-
-app.get("/", (req, res) => {
-  res.send("Hello BRACU!");
-});
-
-app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
-});
+    
+    app.listen(port, () => {
+      console.log(`Server is running on http://localhost:${port}`);
+    });
