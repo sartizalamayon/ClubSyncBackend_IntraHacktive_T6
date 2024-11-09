@@ -8,7 +8,7 @@ const port = process.env.PORT || 3000;
 
 app.use(
   cors({
-    origin: ["http://localhost:5174", "http://localhost:5173", "help-oca.surge.sh"],
+    origin: ["http://localhost:5174", "http://localhost:5173", "https://help-oca.surge.sh", "http://help-oca.surge.sh"],
     credentials: true,
   })
 );
