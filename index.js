@@ -1,4 +1,4 @@
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
@@ -49,6 +49,79 @@ async function run() {
         const result = await clubCollection.find().toArray();
         res.send(result);
       });
+      app.get("/get-club-list", async (req, res) => {
+        const result = await clubCollection.find({}, { projection: { name: 1, email: 1, _id: 0 } }).toArray();
+        res.send(result);
+      });
+
+      const eventsCollection = client.db("ClubSync").collection("events");
+      app.post("/new-event", async(req, res) =>{
+        const data = req.body
+        const newEvent = await eventsCollection.insertOne(data);
+        console.log(newEvent)
+        if (newEvent?.acknowledged){
+          res.status(201).send('Event created successfully');
+        }
+        else{
+          res.status(400).send('Event Creation failed')
+        }
+      })
+
+      app.get('/get-all-pending-events', async (req, res) =>{
+        const requests = await eventsCollection.find({status: 'Pending'}).sort({requestDate:-1}).toArray()
+        res.json(requests)
+      })
+
+      app.get("/get-pending-events/:email", async(req, res)=>{
+        const email = req.params.email
+        const events = await eventsCollection.find({ clubMail:email,  status: 'Pending'}).sort({date:-1}).toArray();
+        res.json(events);
+      })
+
+      app.get("/get-responded-events/:email", async(req, res)=>{
+        const email = req.params.email
+        const events = await eventsCollection.find({ clubMail:email,  status: 'Responded'}).sort({date:-1}).toArray();
+        res.json(events);
+      })
+
+
+      app.delete('/event-planner/:eventId', async(req, res)=>{
+        const id = req.params.eventId
+        const result = await eventsCollection.deleteOne({ _id: new ObjectId(id) });
+        if (result.deletedCount === 1) {
+            res.status(200).send('Event deleted successfully');
+        } else {
+            res.status(400).send('Failed to delete event');
+        }
+      })
+      
+
+      // Get a single event by ID
+app.get('/events/:id', async (req, res) => {
+  const id = req.params.id;
+  const event = await eventsCollection.findOne({ _id: new ObjectId(id) });
+  if (event) {
+    res.json(event);
+  } else {
+    res.status(404).send('Event not found');
+  }
+});
+
+// Update an event
+app.put('/events/:id', async (req, res) => {
+  const id = req.params.id;
+  const updatedEvent = req.body;
+  const result = await eventsCollection.updateOne(
+    { _id: new ObjectId(id) },
+    { $set: updatedEvent }
+  );
+  if (result.modifiedCount === 1) {
+    res.status(200).send('Event updated successfully');
+  } else {
+    res.status(400).send('Failed to update event');
+  }
+});
+
       
       console.log(
         "Pinged your deployment. You successfully connected to MongoDB!"
