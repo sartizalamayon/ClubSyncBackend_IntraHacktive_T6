@@ -61,14 +61,27 @@ async function run() {
     const eventsCollection = client.db("ClubSync").collection("events");
     app.post("/new-event", async (req, res) => {
       const data = req.body;
+      if (data.budget) {
+        data.budget = parseInt(data.budget); 
+      }
+      if(data.guestPassesCount){
+        data.guestPassesCount = parseInt(data.guestPassesCount);
+      }
       const newEvent = await eventsCollection.insertOne(data);
       console.log(newEvent);
+      
       if (newEvent?.acknowledged) {
         res.status(201).send("Event created successfully");
       } else {
-        res.status(400).send("Event Creation failed");
+        res.status(400).send("Event creation failed");
       }
     });
+    
+    // getting total budget
+    app.get("/get_total_budget", async (req,res)=>{
+
+    })
+    
 
     app.get("/get-all-pending-events", async (req, res) => {
       const requests = await eventsCollection
