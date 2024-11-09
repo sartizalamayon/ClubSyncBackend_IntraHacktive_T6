@@ -121,7 +121,7 @@ async function run() {
       }
     });
 
-    // Dashboard DESIGN for pp CC
+    // Dashboard DESIGN for PP CC 
     app.get("/dashboard-info/:email", async (req, res) => {
       const email = req.params.email;
       const query = {email : email};
