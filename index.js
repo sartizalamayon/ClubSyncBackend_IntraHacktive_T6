@@ -47,14 +47,6 @@ async function run() {
   try {
     const clubCollection = client.db("ClubSync").collection("clubs");
     const messageCollection = client.db("ClubSync").collection("messages");
-
-    app.get("/all-clubs", async(req, res) => {
-      const result = await clubCollection.find().toArray();
-      res.send(result)
-    })
-
-
-
     app.get("/test", async (req, res) => {
       const result = await clubCollection.find().toArray();
       res.send(result);
