@@ -156,6 +156,20 @@ async function run() {
       const result = await messageCollection.insertOne(messageInfo);
       res.send(result);
     });
+    // get appected events to show on the central calendar
+    app.get('/accepted-events', async (req, res) => {  
+        const acceptedEvents = await eventsCollection
+          .find({ response: "Accepted" })
+          .project({ clubMail: 1, date: 1, _id: 0 }).toArray();
+        // Map through the array and transform the objects
+        const transformedEvents = acceptedEvents.map(event => ({
+          title: event.clubMail.split("@")[0].toUpperCase(), 
+          date: event.date 
+        }));
+    
+        res.json(transformedEvents);
+      
+    });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
