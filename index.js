@@ -54,7 +54,6 @@ async function run() {
         res.send(result);
       });
 
-
       const eventsCollection = client.db("ClubSync").collection("events");
       app.post("/new-event", async(req, res) =>{
         const data = req.body
@@ -122,6 +121,7 @@ app.put('/events/:id', async (req, res) => {
     res.status(400).send('Failed to update event');
   }
 });
+
       
       console.log(
         "Pinged your deployment. You successfully connected to MongoDB!"
