@@ -108,6 +108,21 @@ async function run() {
       }
     });
 
+    // Dashboard DESIGN for pp CC
+    app.get("/dashboard-info/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = {email : email};
+      const result = await clubCollection.findOne(query)
+      res.send(result);
+    });
+
+    // Showing Upcoming Events In the Dashboard
+    app.get("/dashboard-events", async (req, res) => {
+      const query = { response: "Accepted" };
+      const result = await eventsCollection.find(query).toArray();
+      res.send(result);
+    });
+
     // Get a single event by ID
     app.get("/events/:id", async (req, res) => {
       const id = req.params.id;
@@ -152,23 +167,23 @@ async function run() {
     // send message
     app.post("/send-message", async (req, res) => {
       const messageInfo = req.body;
-    
+
       const result = await messageCollection.insertOne(messageInfo);
       res.send(result);
     });
     // get appected events to show on the central calendar
-    app.get('/accepted-events', async (req, res) => {  
-        const acceptedEvents = await eventsCollection
-          .find({ response: "Accepted" })
-          .project({ clubMail: 1, date: 1, _id: 0 }).toArray();
-        // Map through the array and transform the objects
-        const transformedEvents = acceptedEvents.map(event => ({
-          title: event.clubMail.split("@")[0].toUpperCase(), 
-          date: event.date 
-        }));
-    
-        res.json(transformedEvents);
-      
+    app.get("/accepted-events", async (req, res) => {
+      const acceptedEvents = await eventsCollection
+        .find({ response: "Accepted" })
+        .project({ clubMail: 1, date: 1, _id: 0 })
+        .toArray();
+      // Map through the array and transform the objects
+      const transformedEvents = acceptedEvents.map((event) => ({
+        title: event.clubMail.split("@")[0].toUpperCase(),
+        date: event.date,
+      }));
+
+      res.json(transformedEvents);
     });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
