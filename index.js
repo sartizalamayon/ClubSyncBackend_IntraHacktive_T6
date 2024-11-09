@@ -61,14 +61,27 @@ async function run() {
     const eventsCollection = client.db("ClubSync").collection("events");
     app.post("/new-event", async (req, res) => {
       const data = req.body;
+      if (data.budget) {
+        data.budget = parseInt(data.budget); 
+      }
+      if(data.guestPassesCount){
+        data.guestPassesCount = parseInt(data.guestPassesCount);
+      }
       const newEvent = await eventsCollection.insertOne(data);
       console.log(newEvent);
+      
       if (newEvent?.acknowledged) {
         res.status(201).send("Event created successfully");
       } else {
-        res.status(400).send("Event Creation failed");
+        res.status(400).send("Event creation failed");
       }
     });
+    
+    // getting total budget
+    app.get("/get_total_budget", async (req,res)=>{
+
+    })
+    
 
     app.get("/get-all-pending-events", async (req, res) => {
       const requests = await eventsCollection
@@ -106,6 +119,21 @@ async function run() {
       } else {
         res.status(400).send("Failed to delete event");
       }
+    });
+
+    // Dashboard DESIGN for PP CC 
+    app.get("/dashboard-info/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = {email : email};
+      const result = await clubCollection.findOne(query)
+      res.send(result);
+    });
+
+    // Showing Upcoming Events In the Dashboard
+    app.get("/dashboard-events", async (req, res) => {
+      const query = { response: "Accepted" };
+      const result = await eventsCollection.find(query).toArray();
+      res.send(result);
     });
 
     // Get a single event by ID
@@ -152,23 +180,23 @@ async function run() {
     // send message
     app.post("/send-message", async (req, res) => {
       const messageInfo = req.body;
-    
+
       const result = await messageCollection.insertOne(messageInfo);
       res.send(result);
     });
     // get appected events to show on the central calendar
-    app.get('/accepted-events', async (req, res) => {  
-        const acceptedEvents = await eventsCollection
-          .find({ response: "Accepted" })
-          .project({ clubMail: 1, date: 1, _id: 0 }).toArray();
-        // Map through the array and transform the objects
-        const transformedEvents = acceptedEvents.map(event => ({
-          title: event.clubMail.split("@")[0].toUpperCase(), 
-          date: event.date 
-        }));
-    
-        res.json(transformedEvents);
-      
+    app.get("/accepted-events", async (req, res) => {
+      const acceptedEvents = await eventsCollection
+        .find({ response: "Accepted" })
+        .project({ clubMail: 1, date: 1, _id: 0 })
+        .toArray();
+      // Map through the array and transform the objects
+      const transformedEvents = acceptedEvents.map((event) => ({
+        title: event.clubMail.split("@")[0].toUpperCase(),
+        date: event.date,
+      }));
+
+      res.json(transformedEvents);
     });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
