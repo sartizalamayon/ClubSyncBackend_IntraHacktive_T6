@@ -254,6 +254,15 @@ async function run() {
         .toArray();
       res.json(events);
     });
+    // get only accepted events from the database
+    app.get("/get-responded-events-accepted/:email", async (req, res) => {
+      const email = req.params.email;
+      const events = await eventsCollection
+        .find({ clubMail: email, status: "Accepted" })
+        .sort({ date: -1 })
+        .toArray();
+      res.json(events);
+    });
 
     app.delete("/event-planner/:eventId", async (req, res) => {
       const id = req.params.eventId;
