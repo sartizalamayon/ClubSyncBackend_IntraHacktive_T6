@@ -370,6 +370,24 @@ async function run() {
       const result = await announcementCollection.deleteOne(query);
       res.send(result);
     });
+
+    app.post("/check-room-availability", async (req, res) => {
+      const { date, roomNumber } = req.body;
+      const result = await eventsCollection.findOne({
+        date: date,  // Convert to YYYY-MM-DD format
+        roomNumber: roomNumber,
+        response: 'Accepted'
+      });
+
+      console.log(result)
+  
+
+      if (result) {
+        res.json({ available: false });
+      } else {
+        res.json({ available: true });
+      }
+    })
     
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
