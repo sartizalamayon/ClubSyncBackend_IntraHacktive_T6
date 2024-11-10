@@ -340,6 +340,36 @@ async function run() {
       res.send(result);
     });
     // get appected events to show on the central calendar
+
+
+    //Get all the events
+    app.get("/all-events", async (req, res) => {
+      const events = await eventsCollection.find().toArray();
+      res.json(events);
+    });
+
+
+
+    // Announcement
+    const announcementCollection = client.db("ClubSync").collection("announcements");
+
+    app.get("/announcements", async (req, res) => {
+      const announcements = await announcementCollection.find().toArray();
+      res.json(announcements);
+    });
+
+    app.post("/add-announcement", async (req, res) => {
+      const announcement = req.body;
+      const result = await announcementCollection.insertOne(announcement);
+      res.send(result);
+    });
+
+    app.delete("/delete-announcement/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await announcementCollection.deleteOne(query);
+      res.send(result);
+    });
     
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
