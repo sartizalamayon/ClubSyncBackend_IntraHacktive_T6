@@ -9,7 +9,7 @@ const port = process.env.PORT || 3000;
 
 app.use(
   cors({
-    origin: ["http://localhost:5174", "http://localhost:5173", "https://help-oca.surge.sh", "http://help-oca.surge.sh"],
+    origin: ["http://localhost:5174", "http://localhost:5173", "https://help-oca.surge.sh", "http://help-oca.surge.sh", "https://clubsyncfrontend.vercel.app"],
     credentials: true,
   })
 );
@@ -250,6 +250,15 @@ async function run() {
       const email = req.params.email;
       const events = await eventsCollection
         .find({ clubMail: email, status: "Responded" })
+        .sort({ date: -1 })
+        .toArray();
+      res.json(events);
+    });
+    // get only accepted events from the database
+    app.get("/get-responded-events-accepted/:email", async (req, res) => {
+      const email = req.params.email;
+      const events = await eventsCollection
+        .find({ clubMail: email, response: "Accepted" })
         .sort({ date: -1 })
         .toArray();
       res.json(events);
