@@ -186,7 +186,7 @@ async function run() {
         .toArray();
       res.json(requests);
     });
-
+    // accepted events
     app.get("/accepted-events", async (req, res) => {
       const acceptedEvents = await eventsCollection
         .find({ response: "Accepted" })
