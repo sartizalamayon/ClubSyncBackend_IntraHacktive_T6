@@ -3,6 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
+const nodemailer = require('nodemailer');
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -42,6 +43,29 @@ const verifyToken = (req, res, next) => {
     next();
   });
 };
+const transporter = nodemailer.createTransport({
+  service: 'gmail', // You can use other services like Outlook, Yahoo, etc.
+  auth: {
+    user: 'bunglishh@gmail.com',
+    pass: `${process.env.GMAIL_PASS}`,
+  },
+});
+const sendEmailWithRetry = async (mailOptions, retries = 3) => {
+  for (let i = 0; i < retries; i++) {
+    try {
+      await transporter.sendMail(mailOptions);
+      console.log('Email sent successfully');
+      return; // Exit if successful
+    } catch (error) {
+      console.error(`Error sending email (attempt ${i + 1}):`, error);
+      if (i < retries - 1) {
+        await new Promise((resolve) => setTimeout(resolve, 5000)); // wait 5 seconds
+      } else {
+        console.error('Failed to send email after multiple attempts');
+      }
+    }
+  }
+};
 
 async function run() {
   try {
@@ -69,13 +93,73 @@ async function run() {
         .toArray();
       res.send(result);
     });
-
+    // add new event with email sending features
     const eventsCollection = client.db("ClubSync").collection("events");
     app.post("/new-event", async (req, res) => {
       const data = req.body;
-      if (data.budget) {
-        data.budget = parseInt(data.budget); 
+      // sent email notification
+      if (data.termsAgreed) {
+        const mailOptions = {
+          from: 'bunglishh@gmail.com', // Sender address
+          to: `${data.advisorEmail}`,           // Club advisor's email
+          subject: `Event Request Submission: ${data.title}`,  // Dynamic subject with event title
+          text: `
+            Dear Dear Club Advisor,
+      
+            This is to inform you that a new event request titled "${data.title}" has been submitted by our club and is currently under review.
+      
+            Below are the details of the request:
+      
+            - **Event Title**: ${data.title}
+            - **Description**: ${data.description}
+            - **Proposed Date**: ${data.date}
+            - **Budget Required**: ${data.needsBudget ? 'Yes' : 'No'}
+            - **Room Reservation**: ${data.needsRoom ? 'Yes' : 'No'}
+            - **Guest Passes Required**: ${data.needsGuestPasses ? 'Yes' : 'No'}
+            - **Additional Requirements**: ${data.additionalRequirements || 'None'}
+      
+            Current Status: ${data.status}
+      
+            We kindly seek your guidance and approval for the above request. Should you need further information or have any suggestions, please feel free to let us know.
+      
+            Sincerely,
+            The Club Events Team
+          `,
+          html: `
+            <p>Dear Club Advisor,</p>
+      
+            <p>This is to inform you that a new event request titled "<strong>${data.title}</strong>" has been submitted by our club and is currently under review.</p>
+      
+            <h3>Event Details:</h3>
+            <ul>
+              <li><strong>Event Title:</strong> ${data.title}</li>
+              <li><strong>Description:</strong> ${data.description}</li>
+              <li><strong>Proposed Date:</strong> ${data.date}</li>
+              <li><strong>Budget Required:</strong> ${data.needsBudget ? 'Yes' : 'No'}</li>
+              <li><strong>Room Reservation:</strong> ${data.needsRoom ? 'Yes' : 'No'}</li>
+              <li><strong>Guest Passes Required:</strong> ${data.needsGuestPasses ? 'Yes' : 'No'}</li>
+              <li><strong>Additional Requirements:</strong> ${data.additionalRequirements || 'None'}</li>
+            </ul>
+      
+            <p><strong>Current Status:</strong> ${data.status}</p>
+      
+            <p>We kindly seek your guidance and approval for the above request. Should you need further information or have any suggestions, please feel free to let us know.</p>
+      
+            <p>Sincerely,</p>
+            <p>${data.clubMail}</p>
+            <p>The Club Events Team</p>
+          `
+        };
+      
+        try {
+          // Send the email
+          await transporter.sendMail(mailOptions);
+          // console.log('Email sent successfully');
+        } catch (error) {
+          // console.error('Error sending email:', error);
+        }
       }
+      
       if(data.guestPassesCount){
         data.guestPassesCount = parseInt(data.guestPassesCount);
       }
