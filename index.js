@@ -388,6 +388,23 @@ async function run() {
         res.json({ available: true });
       }
     })
+
+    app.patch("/clubs-update/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log(id)
+      const updatedData = req.body;
+  
+      const result = await clubCollection.updateOne(
+        { _id: new ObjectId(id) },
+        { $set: updatedData }
+      );
+  
+      if (result.modifiedCount === 1) {
+        res.status(200).send("Club updated successfully");
+      } else {
+        res.status(400).send("Failed to update club");
+      }
+    });
     
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
