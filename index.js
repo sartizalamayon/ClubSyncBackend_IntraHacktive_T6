@@ -9,7 +9,7 @@ const port = process.env.PORT || 3000;
 
 app.use(
   cors({
-    origin: ["http://localhost:5174", "http://localhost:5173", "https://clubsyncfrontend.vercel.app", "http://clubsync-sooty.vercel.app"],
+    origin: ["http://localhost:5174", "http://localhost:5173", "https://clubsyncfrontend.vercel.app", "http://clubsync-sooty.vercel.app", "https://clubsync-sooty.vercel.app"],
     credentials: true,
   })
 );
