@@ -370,6 +370,41 @@ async function run() {
       const result = await announcementCollection.deleteOne(query);
       res.send(result);
     });
+
+    app.post("/check-room-availability", async (req, res) => {
+      const { date, roomNumber } = req.body;
+      const result = await eventsCollection.findOne({
+        date: date,  // Convert to YYYY-MM-DD format
+        roomNumber: roomNumber,
+        response: 'Accepted'
+      });
+
+      console.log(result)
+  
+
+      if (result) {
+        res.json({ available: false });
+      } else {
+        res.json({ available: true });
+      }
+    })
+
+    app.patch("/clubs-update/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log(id)
+      const updatedData = req.body;
+  
+      const result = await clubCollection.updateOne(
+        { _id: new ObjectId(id) },
+        { $set: updatedData }
+      );
+  
+      if (result.modifiedCount === 1) {
+        res.status(200).send("Club updated successfully");
+      } else {
+        res.status(400).send("Failed to update club");
+      }
+    });
     
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
